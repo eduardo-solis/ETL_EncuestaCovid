@@ -22,10 +22,20 @@ logger = logging.getLogger(__name__)
 conn = connect(user='root', password='root', host='127.0.0.1', database='encuestacovid')
 
 # Funcion para obtener los datos de la encuesta
-def _form_scrapper():
+def _form_scrapper(carrera):
     logger.info('..:: Iniciando el scrapper para la obtención del formulario ::..')
     cursor = conn.cursor()
-    sql = "SELECT * FROM formulario"
+    sql = ""
+
+    if carrera == "1":
+        sql = "SELECT * FROM formulario"
+    if carrera == "2":
+        sql = "SELECT * FROM formulario WHERE pregunta_5 = 'Ingenieria en Desarrollo y Gestion de Software'"
+    if carrera == "3":
+        sql = "SELECT * FROM formulario WHERE pregunta_5 = 'Ingeniería en Redes y Ciberseguridad'"
+    if carrera == "4":
+        sql = "SELECT * FROM formulario WHERE pregunta_5 = 'Ingeniería en Entornos Virtuales y Negocios Digitales'"
+
     cursor.execute(sql)
     formularios = cursor.fetchall()
     conn.close()
@@ -53,12 +63,30 @@ def _save_form(formularios):
         writer.writerow(csv_headers)
         for formulario in formularios:
 
-            p13 = str(formulario[13]).replace(", ", "|")
-            p15 = str(formulario[15]).replace(", ", "|")
-            p16 = str(formulario[16]).replace(", ", "|")
-            p17 = str(formulario[17]).replace(", ", "|")
-            p18 = str(formulario[18]).replace(", ", "|")
-            p28 = str(formulario[28]).replace(", ", "|")
+            p13_1 = str(formulario[13]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p13_l = len(p13_1)
+            p13 = p13_1[:p13_l-1]
+
+            p15_1 = str(formulario[15]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p15_l = len(p15_1)
+            p15 = p15_1[:p15_l-1]
+
+            p16_1 = str(formulario[16]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p16_l = len(p16_1)
+            p16 = p16_1[:p16_l-1]
+
+            p17_1 = str(formulario[17]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p17_l = len(p17_1)
+            p17 = p17_1[:p17_l-1]
+
+            p18_1 = str(formulario[18]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p18_l = len(p18_1)
+            p18 = p18_1[:p18_l-1]
+
+            p28_1 = str(formulario[28]).replace(", ", "|").replace(",", "|").replace("\"", "")
+            p28_l = len(p28_1)
+            p28 = p28_1[:p28_l-1]
+
             p30 = str(formulario[30]).replace(",", " ").replace("  ", " ")
 
             row = [formulario[0],formulario[1],formulario[2],
@@ -74,4 +102,26 @@ def _save_form(formularios):
             writer.writerow(row)
 
 if __name__=='__main__':
-    _form_scrapper()
+
+    # Creando un nuevo parser
+    parser = argparse.ArgumentParser()
+
+    # Creando la lista de opciones
+    opciones = ["1","2","3","4"]
+    
+    # 1 - Todas las carreras
+    # 2 - Ingeniería en Desarrollo y Gestión de Software
+    # 3 - Ingeniería en Redes y Ciberseguridad
+    # 4 - Ingeniería en Entornos Virtuales y Negocios Digitales
+
+    # Añadiendo argumentos (obligatorios) y ayuda al parser
+    parser.add_argument('carrera',
+                        help="Carrera de la utl que quiere escrapear",
+                        type = str,
+                        choices=opciones)
+
+    # Parseamos los argumentos y nos devuelve un objeto con ellos.
+    args = parser.parse_args()
+    print(args)
+    # Llammamos a la funcion para recuperar las url's
+    _form_scrapper(args.carrera)
